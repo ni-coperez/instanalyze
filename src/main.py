@@ -60,10 +60,37 @@ def main():
 
         elif choice == '2':
             # Solicitudes pendientes
-            pending_users = {user['value'] for user in pending_requests}
+            pending_users = sorted({user['value'] for user in pending_requests})
             print(f"\nTotal de solicitudes pendientes: {len(pending_users)}")
+
             if len(pending_users) > 0:
-                paginate(sorted(pending_users))
+                page_size = 30
+                total_pages = (len(pending_users) + page_size - 1) // page_size
+                current_page = 1
+
+                while current_page <= total_pages:
+                    start = (current_page - 1) * page_size
+                    end = start + page_size
+                    page_data = pending_users[start:end]
+
+                    print(f"\nPágina {current_page} de {total_pages}")
+                    for item in page_data:
+                        print(f"- {item}")
+
+                    action = input("\n¿Deseas dejar de seguir a estos contactos? (s/n): ").strip().lower()
+                    if action == 's':
+                        cancelled_count = 0
+                        for user in page_data:
+                            if scraper.unfollow_if_requested(user):
+                                cancelled_count += 1
+
+                        print(f"\n{cancelled_count} de {len(page_data)} solicitudes canceladas.")
+
+                    next_action = input("\nPresiona Enter para ver la siguiente página o 'q' para volver al menú principal: ")
+                    if next_action.lower() == 'q':
+                        break
+
+                    current_page += 1
             else:
                 print("No tienes solicitudes pendientes.")
 

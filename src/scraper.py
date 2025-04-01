@@ -133,6 +133,40 @@ class InstagramScraper:
             print(f"Error al intentar obtener el estado del botón: {e}")
             return None
 
+    def unfollow_if_requested(self, profile_url):
+        print(f"Intentando dejar de seguir a: {profile_url}")
+
+        try:
+            full_profile_url = f"https://www.instagram.com/{profile_url}/"
+            self.driver.get(full_profile_url)
+            time.sleep(3)  # Esperar a que la página cargue completamente
+
+            # Buscar el botón de seguir
+            follow_button = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') and contains(@class, '_acap')]")
+            print(f"Botón encontrado: {follow_button.text}")
+
+            if follow_button.text == "Solicitado":
+                follow_button.click()
+                print("Solicitud de seguimiento cancelada, esperando confirmación...")
+
+                time.sleep(2)  # Esperar un poco para que el diálogo de confirmación aparezca  
+                
+                # Esperar a que aparezca el diálogo de confirmación y hacer clic en "Dejar de seguir"
+                unfollow_button = WebDriverWait(self.driver, 5).until(
+                    EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Dejar de seguir')]"))
+                )
+                unfollow_button.click()
+                print(f"Dejaste de seguir a {profile_url}")
+                return True
+
+            else:
+                print(f"No se realizó ninguna acción, el botón dice: {follow_button.text}")
+                return False
+
+        except Exception as e:
+            print(f"Error al intentar dejar de seguir: {e}")
+            return False
+
     def close(self):
         """Cerrar el navegador"""
         self.driver.quit()
