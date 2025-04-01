@@ -113,15 +113,19 @@ class InstagramScraper:
             return False
 
     def check_follow_button(self, profile_url):
-        print(f"Intentando acceder a: {profile_url}")
+        print(f"Intentando acceder a: https://www.instagram.com/{profile_url}/")
         print(f"Estado de sesión antes de acceder: {self.driver.session_id}")  
 
         try:
-            self.driver.get(profile_url)
+            # Construir la URL completa del perfil
+            full_profile_url = f"https://www.instagram.com/{profile_url}/"
+            self.driver.get(full_profile_url)  # Navegar al perfil con la URL completa
             print("Página cargada correctamente.")
 
+            time.sleep(3)  # Esperar a que la página cargue completamente
+
             # Buscar el botón de seguir...
-            button = self.driver.find_element(By.TAG_NAME, "button")
+            button = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') and contains(@class, '_acap')]")
             print(f"Botón encontrado: {button.text}")
             return button.text
 
