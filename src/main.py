@@ -1,4 +1,5 @@
 from data_loader import JsonLoader
+from scraper import InstagramScraper
 
 def paginate(data, page_size=30):
     """Función para paginar los resultados"""
@@ -28,14 +29,21 @@ def main():
     followers = loader.load_followers("data/followers_1.json")
     pending_requests = loader.load_pending_follow_requests("data/pending_follow_requests.json")
 
+    username = input("Ingresa tu usuario de Instagram: ")
+    password = input("Ingresa tu contraseña: ")
+
+    scraper = InstagramScraper(username, password)
+    scraper.login()
+
     while True:
         print("\nSeleccione una opción:")
         print("1 - Usuarios que te siguen pero no sigues")
         print("2 - Solicitudes pendientes")
         print("3 - Usuarios que sigues pero no te siguen")
-        print("4 - Salir")
+        print("4 - Verificar estado del botón de seguimiento")
+        print("5 - Salir")
 
-        choice = input("Elige una opción (1, 2, 3, 4): ")
+        choice = input("Elige una opción (1, 2, 3, 4, 5): ")
 
         if choice == '1':
             # Usuarios que te siguen pero no sigues
@@ -73,12 +81,19 @@ def main():
                 print("No sigues a nadie que no te siga.")
 
         elif choice == '4':
-            # Salir
+            profile_url = input("Ingresa la URL del perfil: ")
+            status = scraper.check_follow_button(profile_url)
+
+            if status:
+                print(f"El estado del botón es: {status}")
+            else:
+                print("No se pudo determinar el estado de seguimiento.")
+                
+        else:
+             # Salir
+            scraper.close()
             print("Saliendo de la aplicación...")
             break
-
-        else:
-            print("Opción no válida, por favor elige una opción válida.")
 
 if __name__ == "__main__":
     main()
