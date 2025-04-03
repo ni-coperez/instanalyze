@@ -159,6 +159,10 @@ class InstagramScraper:
                 print(f"Dejaste de seguir a {profile_url}")
                 return True
 
+            elif follow_button.text == "Seguir":
+                print(f"{profile_url} ya no está siendo seguido.")
+                return True
+
             else:
                 print(f"No se realizó ninguna acción, el botón dice: {follow_button.text}")
                 return False

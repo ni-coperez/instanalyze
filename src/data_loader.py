@@ -52,6 +52,15 @@ class JsonLoader:
         ]
         return self.pending_requests_data
 
+    def save_pending_follow_requests(self, path: str, pending_requests: List[Dict[str, Any]]) -> None:
+        """Guarda la lista de solicitudes pendientes en un archivo JSON"""
+        data = {"relationships_follow_requests_sent": [{"string_list_data": [item]} for item in pending_requests]}
+        try:
+            with open(path, "w", encoding="utf-8") as file:
+                json.dump(data, file, indent=4, ensure_ascii=False)
+        except Exception as e:
+            raise ValueError(f"Error al guardar el archivo {path}: {e}")
+
     def get_following(self) -> List[Dict[str, Any]]:
         """Devuelve la lista de seguidos cargados"""
         return self.following_data
