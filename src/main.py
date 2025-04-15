@@ -1,5 +1,7 @@
+import time
 from data_loader import JsonLoader
 from scraper import InstagramScraper
+import json
 
 def paginate(data, page_size=30):
     """Función para paginar los resultados"""
@@ -37,28 +39,13 @@ def main():
 
     while True:
         print("\nSeleccione una opción:")
-        print("1 - Usuarios que te siguen pero no sigues")
-        print("2 - Solicitudes pendientes")
-        print("3 - Usuarios que sigues pero no te siguen")
-        print("4 - Verificar estado del botón de seguimiento")
-        print("5 - Salir")
+        print("1 - Eliminar las Solicitudes pendientes")
+        print("2 - Eliminar Usuarios que sigues pero no te siguen")
+        print("3 - Salir")
 
-        choice = input("Elige una opción (1, 2, 3, 4, 5): ")
+        choice = input("Elige una opción (1, 2, 3): ")
 
         if choice == '1':
-            # Usuarios que te siguen pero no sigues
-            followers_users = {user['value'] for user in followers}
-            following_users = {user['value'] for user in following}
-
-            not_followed_back = followers_users - following_users  # Seguidores que no sigues
-
-            print(f"\nTotal de usuarios que te siguen pero no sigues: {len(not_followed_back)}")
-            if len(not_followed_back) > 0:
-                paginate(sorted(not_followed_back))
-            else:
-                print("No hay usuarios que te sigan pero que no sigas.")
-
-        elif choice == '2':
                 # Solicitudes pendientes
                 pending_users = sorted({user['value'] for user in pending_requests})
                 print(f"\nTotal de solicitudes pendientes: {len(pending_users)}")
@@ -103,30 +90,53 @@ def main():
                 else:
                     print("No tienes solicitudes pendientes.")
 
-        elif choice == '3':
+        elif choice == '2':
             # Usuarios que sigues pero no te siguen
             following_users = {user['value'] for user in following}
             followers_users = {user['value'] for user in followers}
 
-            not_followed_by = following_users - followers_users  # Los que sigues pero no te siguen
+            not_followed_by = sorted(following_users - followers_users)
 
-            print(f"\nTotal de usuarios que sigues pero no te siguen: {len(not_followed_by)}")
-            if len(not_followed_by) > 0:
-                paginate(sorted(not_followed_by))
-            else:
-                print("No sigues a nadie que no te siga.")
+            # Cargar white list
+            try:
+                with open("data/white_list.json", "r", encoding="utf-8") as f:
+                    white_list = {entry['value'] for entry in json.load(f)}
+            except (FileNotFoundError, json.JSONDecodeError):
+                white_list = set()
 
-        elif choice == '4':
-            profile_url = input("Ingresa la URL del perfil: ")
-            status = scraper.check_follow_button(profile_url)
+            # Filtrar usuarios que no están en la whitelist
+            filtered_users = [user for user in not_followed_by if user not in white_list]
 
-            if status:
-                print(f"El estado del botón es: {status}")
-            else:
-                print("No se pudo determinar el estado de seguimiento.")
+            print(f"\nTotal de usuarios que sigues pero no te siguen (filtrados): {len(filtered_users)}")
+
+            for user in filtered_users:
+                print(f"\nPerfil: {user}")
+                scraper.view_profile(user)
                 
-        else:
-             # Salir
+                action = input("¿Dejar de seguir (d) / Agregar a whitelist (w) / Saltar (s) / Salir (q)? ").strip().lower()
+
+                if action == 'q':
+                    print("Saliendo del recorrido de usuarios.")
+                    break
+                elif action == 'w':
+                    print(f"Añadiendo {user} a la white list...")
+                    white_list.add(user)
+                elif action == 'd':
+                    if scraper.unfollow_if_requested(user):
+                        print(f"Eliminando {user} del JSON de following.")
+                        following = [u for u in following if u['value'] != user]
+                else:
+                    print("Saltando...")
+
+            # Guardar archivo de following actualizado
+            loader.save_following("data/following.json", following)
+
+            # Guardar white list actualizada
+            with open("data/white_list.json", "w", encoding="utf-8") as f:
+                json.dump([{"value": user} for user in sorted(white_list)], f, indent=4, ensure_ascii=False)
+
+        elif choice == '3':
+            # Salir
             scraper.close()
             print("Saliendo de la aplicación...")
             break

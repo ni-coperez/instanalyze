@@ -61,6 +61,20 @@ class JsonLoader:
         except Exception as e:
             raise ValueError(f"Error al guardar el archivo {path}: {e}")
 
+    def save_following(self, path: str, following_data: List[Dict[str, Any]]) -> None:
+        """Guarda la lista de seguidos en un archivo JSON"""
+        data = {
+            "relationships_following": [
+                {"string_list_data": [item], "media_list_data": [], "title": ""}
+                for item in following_data
+            ]
+        }
+        try:
+            with open(path, "w", encoding="utf-8") as file:
+                json.dump(data, file, indent=4, ensure_ascii=False)
+        except Exception as e:
+            raise ValueError(f"Error al guardar el archivo {path}: {e}")
+
     def get_following(self) -> List[Dict[str, Any]]:
         """Devuelve la lista de seguidos cargados"""
         return self.following_data

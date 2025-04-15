@@ -112,18 +112,19 @@ class InstagramScraper:
         except TimeoutException:
             return False
 
+    def view_profile(self, profile_url):
+        """Carga el perfil del usuario en el navegador para revisión manual"""
+        full_profile_url = f"https://www.instagram.com/{profile_url}/"
+        self.driver.get(full_profile_url)
+        print(f"Perfil abierto en navegador: {full_profile_url}")
+
     def check_follow_button(self, profile_url):
         print(f"Intentando acceder a: https://www.instagram.com/{profile_url}/")
         print(f"Estado de sesión antes de acceder: {self.driver.session_id}")  
 
         try:
-            # Construir la URL completa del perfil
-            full_profile_url = f"https://www.instagram.com/{profile_url}/"
-            self.driver.get(full_profile_url)  # Navegar al perfil con la URL completa
-            print("Página cargada correctamente.")
-
+            self.view_profile(profile_url)
             time.sleep(3)  # Esperar a que la página cargue completamente
-
             # Buscar el botón de seguir...
             button = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') and contains(@class, '_acap')]")
             print(f"Botón encontrado: {button.text}")
@@ -137,9 +138,13 @@ class InstagramScraper:
         print(f"Intentando dejar de seguir a: {profile_url}")
 
         try:
-            full_profile_url = f"https://www.instagram.com/{profile_url}/"
-            self.driver.get(full_profile_url)
-            time.sleep(3)  # Esperar a que la página cargue completamente
+            current_url = self.driver.current_url
+
+            if not current_url.rstrip('/').endswith(f"/{profile_url}"):
+                self.view_profile(profile_url)
+                time.sleep(3)
+            else:
+                print(f"Ya estás en el perfil de {profile_url}")
 
             # Buscar el botón de seguir
             follow_button = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') and contains(@class, '_acap')]")
@@ -151,17 +156,51 @@ class InstagramScraper:
 
                 time.sleep(2)  # Esperar un poco para que el diálogo de confirmación aparezca  
                 
-                # Esperar a que aparezca el diálogo de confirmación y hacer clic en "Dejar de seguir"
-                unfollow_button = WebDriverWait(self.driver, 5).until(
-                    EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Dejar de seguir')]"))
-                )
-                unfollow_button.click()
-                print(f"Dejaste de seguir a {profile_url}")
-                return True
+                # Buscar cualquier elemento clickeable que contenga el texto "Dejar de seguir"
+                try:
+                    unfollow_button = WebDriverWait(self.driver, 3).until(
+                        EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'Dejar de seguir')]"))
+                    )
+                    unfollow_button.click()
+                    print(f"Dejaste de seguir a {profile_url}")
+                    return True
+                except TimeoutException:
+                    # Si no aparece el diálogo, verificar si el botón cambió a "Seguir"
+                    time.sleep(1)
+                    follow_button = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') and contains(@class, '_acap')]")
+                    if follow_button.text == "Seguir":
+                        print(f"{profile_url} ya no está siendo seguido.")
+                        return True
+                    else:
+                        print(f"No se pudo confirmar la acción. El botón ahora dice: {follow_button.text}")
+                        return False
 
             elif follow_button.text == "Seguir":
                 print(f"{profile_url} ya no está siendo seguido.")
                 return True
+            
+            elif follow_button.text == "Siguiendo":
+                follow_button.click()
+                print("Hicimos clic en 'Siguiendo', verificando si aparece el diálogo...")
+
+                # Buscar cualquier elemento clickeable que contenga el texto "Dejar de seguir"
+                try:
+                    unfollow_button = WebDriverWait(self.driver, 3).until(
+                        EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'Dejar de seguir')]"))
+                    )
+                    unfollow_button.click()
+                    print(f"Dejaste de seguir a {profile_url}")
+                    return True
+                except TimeoutException:
+                    # Si no aparece el diálogo, verificar si el botón cambió a "Seguir"
+                    time.sleep(1)
+                    follow_button = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') and contains(@class, '_acap')]")
+                    if follow_button.text == "Seguir":
+                        print(f"{profile_url} ya no está siendo seguido.")
+                        return True
+                    else:
+                        print(f"No se pudo confirmar la acción. El botón ahora dice: {follow_button.text}")
+                        return False
 
             else:
                 print(f"No se realizó ninguna acción, el botón dice: {follow_button.text}")
