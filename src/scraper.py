@@ -168,7 +168,14 @@ class InstagramScraper:
                 return False
 
         except Exception as e:
-            print(f"Error al intentar dejar de seguir: {e}")
+            error_message = str(e)
+            if "invalid session id" in error_message:
+                print("Error: Sesión inválida. Es posible que el navegador haya sido cerrado o la sesión haya expirado.")
+                self.close()
+                self.login()  # Intentar volver a iniciar sesión
+                return False
+            else:
+                print(f"Error al intentar dejar de seguir: {error_message}")
             return False
 
     def close(self):

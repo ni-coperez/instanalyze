@@ -64,7 +64,7 @@ def main():
                 print(f"\nTotal de solicitudes pendientes: {len(pending_users)}")
 
                 if len(pending_users) > 0:
-                    page_size = 30
+                    page_size = 500
                     total_pages = (len(pending_users) + page_size - 1) // page_size
                     current_page = 1
 
