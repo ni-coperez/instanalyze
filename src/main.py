@@ -4,6 +4,7 @@ from scraper import InstagramScraper
 import json
 from colorama import init, Fore, Style
 from pyfiglet import Figlet
+import pwinput
 
 init(autoreset=True)  # Inicializar colorama
 
@@ -69,8 +70,12 @@ def main():
     followers = loader.load_followers("data/followers_1.json")
     pending_requests = loader.load_pending_follow_requests("data/pending_follow_requests.json")
 
-    username = input("Ingresa tu usuario de Instagram: ")
-    password = input("Ingresa tu contraseña: ")
+    print(Fore.YELLOW + "\n----------------------------------------")
+    print(Fore.CYAN + "Inicio de sesión en Instagram")
+    print(Fore.YELLOW + "----------------------------------------")
+
+    username = input(Fore.WHITE + "👤 Usuario: ").strip()
+    password = pwinput.pwinput(prompt=Fore.WHITE + "🔒 Contraseña: ", mask="*")
 
     scraper = InstagramScraper(username, password)
     scraper.login()

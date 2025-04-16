@@ -7,6 +7,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import time
+from colorama import Fore, Style, init
+init(autoreset=True)
 
 class InstagramScraper:
     def __init__(self, username, password):
@@ -24,7 +26,7 @@ class InstagramScraper:
                 EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Rechazar cookies opcionales')]"))
             )
             reject_cookies_button.click()  # Hacemos clic en el botón para rechazar las cookies
-            print("Cookies opcionales rechazadas.")
+            print(Fore.YELLOW + "⚠️ Cookies opcionales rechazadas.")
         except TimeoutException:
             print("No se encontró el botón de cookies opcionales. Continuando con el login.")
         
@@ -39,7 +41,7 @@ class InstagramScraper:
         login_button.click()
         
         time.sleep(5)  # Esperamos unos segundos para asegurarnos de que la página se haya cargado
-        print("Login completado.")
+        print(Fore.GREEN + "✅ Login completado.")
         
         # Intentamos encontrar el campo para el código de verificación
         self.handle_verification_code()
@@ -59,7 +61,10 @@ class InstagramScraper:
                 # Si el código anterior falló, lo borramos
                 verification_input.clear()  # Esto borra el contenido del campo de texto
 
-                verification_code = input("Por favor, ingrese el código de seguridad (de la app de autenticación): ")
+                print(Fore.YELLOW + "\n----------------------------------------")
+                print(Fore.CYAN + "🔐 Autenticación en dos pasos")
+                print(Fore.YELLOW + "----------------------------------------")
+                verification_code = input(Fore.WHITE + "Ingresa el código de verificación: ").strip()
 
                 # Llenamos el campo con el código ingresado
                 verification_input.send_keys(verification_code)
@@ -139,7 +144,7 @@ class InstagramScraper:
 
             if not current_url.rstrip('/').endswith(f"/{profile_url}"):
                 self.view_profile(profile_url)
-                time.sleep(3)
+                time.sleep(1)
 
             # Buscar el botón de seguir
             follow_button = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') and contains(@class, '_acap')]")
@@ -147,7 +152,7 @@ class InstagramScraper:
             if follow_button.text == "Solicitado":
                 follow_button.click()
 
-                time.sleep(2)  # Esperar un poco para que el diálogo de confirmación aparezca  
+                time.sleep(1)  # Esperar un poco para que el diálogo de confirmación aparezca  
                 
                 # Buscar cualquier elemento clickeable que contenga el texto "Dejar de seguir"
                 try:
