@@ -147,7 +147,21 @@ class InstagramScraper:
                 time.sleep(1)
 
             # Buscar el botón de seguir
-            follow_button = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') and contains(@class, '_acap')]")
+            # Buscar el botón por tipo y luego verificar el texto interno
+            buttons = self.driver.find_elements(By.XPATH, "//button[@type='button']")
+            follow_button = None
+            for btn in buttons:
+                try:
+                    # El texto del botón está en un div hijo
+                    div = btn.find_element(By.XPATH, ".//div[contains(@class, '_ap3a')]")
+                    btn_text = div.text.strip()
+                    if btn_text in ["Siguiendo", "Seguir", "Solicitado"]:
+                        follow_button = btn
+                        break
+                except Exception:
+                    continue
+            if not follow_button:
+                raise Exception("No se encontró el botón de seguir/solicitar/siguiendo.")
 
             if follow_button.text == "Solicitado":
                 follow_button.click()
