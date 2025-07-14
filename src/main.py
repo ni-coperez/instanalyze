@@ -60,7 +60,8 @@ def mostrar_menu():
     print(Style.BRIGHT + Fore.CYAN + "================== MENÚ ==================")
     print(Fore.YELLOW + "1." + Fore.WHITE + " Eliminar solicitudes pendientes")
     print(Fore.YELLOW + "2." + Fore.WHITE + " Eliminar usuarios que sigues pero no te siguen")
-    print(Fore.YELLOW + "3." + Fore.WHITE + " Salir")
+    print(Fore.YELLOW + "3." + Fore.WHITE + " Ocultar o mostrar historias")
+    print(Fore.YELLOW + "4." + Fore.WHITE + " Salir")
     print(Fore.CYAN + "==========================================")
     
 def main():
@@ -82,7 +83,7 @@ def main():
 
     while True:
         mostrar_menu()
-        choice = input(Fore.GREEN + "Elige una opción (1-3): " + Style.RESET_ALL).strip()
+        choice = input(Fore.GREEN + "Elige una opción (1-4): " + Style.RESET_ALL).strip()
 
         if choice == '1':
                 # Solicitudes pendientes
@@ -197,7 +198,10 @@ def main():
             with open("data/white_list.json", "w", encoding="utf-8") as f:
                 json.dump([{"value": user} for user in sorted(white_list)], f, indent=4, ensure_ascii=False)
 
-        else:
+        elif choice == '3':
+            scraper.hide_stories()
+
+        elif choice == '4':
             # Salir
             scraper.close()
             print(Fore.MAGENTA + "¡Hasta la próxima!")

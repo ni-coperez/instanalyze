@@ -122,22 +122,6 @@ class InstagramScraper:
         full_profile_url = f"https://www.instagram.com/{profile_url}/"
         self.driver.get(full_profile_url)
 
-    # def check_follow_button(self, profile_url):
-    #     print(f"Intentando acceder a: https://www.instagram.com/{profile_url}/")
-    #     print(f"Estado de sesión antes de acceder: {self.driver.session_id}")  
-
-    #     try:
-    #         self.view_profile(profile_url)
-    #         time.sleep(3)  # Esperar a que la página cargue completamente
-    #         # Buscar el botón de seguir...
-    #         button = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') and contains(@class, '_acap')]")
-    #         print(f"Botón encontrado: {button.text}")
-    #         return button.text
-
-    #     except Exception as e:
-    #         print(f"Error al intentar obtener el estado del botón: {e}")
-    #         return None
-
     def unfollow_if_requested(self, profile_url):
         try:
             current_url = self.driver.current_url
@@ -219,6 +203,65 @@ class InstagramScraper:
             else:
                 print(f"Error al intentar dejar de seguir: {error_message}")
             return False
+
+    def hide_stories(self):
+        """
+        Permite ocultar o mostrar las historias para una lista de usuarios especificados en un archivo JSON.
+        """
+        import json
+
+        action_input = input("¿Qué deseas hacer? (o = ocultar / m = mostrar historias): ").strip().lower()
+        if action_input not in ["o", "m"]:
+            print("Acción no válida. Usa 'o' para ocultar o 'm' para mostrar.")
+            return
+        action = "ocultar" if action_input == "o" else "mostrar"
+
+        try:
+            with open("custom/hide_story.json", "r", encoding="utf-8") as f:
+                users = json.load(f)
+        except Exception as e:
+            print(f"No se pudo cargar el archivo JSON: {e}")
+            return
+
+        self.driver.get("https://www.instagram.com/accounts/hide_story_and_live_from/")
+        time.sleep(3)
+
+        for user in users:
+            username = user.get("value")
+            if not username:
+                continue
+
+            try:
+                search_input = WebDriverWait(self.driver, 5).until(
+                    EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Buscar']"))
+                )
+                search_input.clear()
+                search_input.send_keys(username)
+                time.sleep(2)
+
+                # Esperamos a que aparezca el resultado de búsqueda
+                result = WebDriverWait(self.driver, 5).until(
+                    EC.presence_of_element_located((By.XPATH, f"//span[text()='{username}']"))
+                )
+
+                # Subimos al div contenedor del usuario para encontrar el checkbox asociado
+                user_container = result.find_element(By.XPATH, "./ancestor::div[@role='button']")
+                checkbox = user_container.find_element(By.XPATH, ".//div[@role='button'][@tabindex='0']")
+
+                # Determinar si está chequeado
+                checkbox_status = checkbox.find_element(By.XPATH, ".//div[contains(@style,'background-color')]")
+                is_checked = "rgb(0, 149, 246)" in checkbox_status.get_attribute("style")
+
+                should_click = (action == "ocultar" and not is_checked) or (action == "mostrar" and is_checked)
+                if should_click:
+                    checkbox.click()
+                    print(f"{action.capitalize()} historias para: {username}")
+                else:
+                    print(f"Ya estaba en el estado deseado: {username}")
+                time.sleep(1)
+
+            except Exception as e:
+                print(f"No se pudo procesar {username}: {e}")
 
     def close(self):
         """Cerrar el navegador"""
