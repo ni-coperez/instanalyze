@@ -159,7 +159,7 @@ def main():
 
             # Cargar white list
             try:
-                with open("data/white_list.json", "r", encoding="utf-8") as f:
+                with open("custom/white_list.json", "r", encoding="utf-8") as f:
                     white_list = {entry['value'] for entry in json.load(f)}
             except (FileNotFoundError, json.JSONDecodeError):
                 white_list = set()
@@ -195,7 +195,7 @@ def main():
             loader.save_following("data/following.json", following)
 
             # Guardar white list actualizada
-            with open("data/white_list.json", "w", encoding="utf-8") as f:
+            with open("custom/white_list.json", "w", encoding="utf-8") as f:
                 json.dump([{"value": user} for user in sorted(white_list)], f, indent=4, ensure_ascii=False)
 
         elif choice == '3':
