@@ -61,7 +61,8 @@ def mostrar_menu():
     print(Fore.YELLOW + "1." + Fore.WHITE + " Eliminar solicitudes pendientes")
     print(Fore.YELLOW + "2." + Fore.WHITE + " Eliminar usuarios que sigues pero no te siguen")
     print(Fore.YELLOW + "3." + Fore.WHITE + " Ocultar o mostrar historias")
-    print(Fore.YELLOW + "4." + Fore.WHITE + " Salir")
+    print(Fore.YELLOW + "4." + Fore.WHITE + " Gestionar mejores amigos")
+    print(Fore.YELLOW + "5." + Fore.WHITE + " Salir")
     print(Fore.CYAN + "==========================================")
     
 def main():
@@ -202,7 +203,22 @@ def main():
             scraper.hide_stories()
 
         elif choice == '4':
-            # Salir
+            while True:
+                print(Fore.CYAN + "\n========= GESTIÓN DE MEJORES AMIGOS =========")
+                print(Fore.YELLOW + "1." + Fore.WHITE + " Eliminar todos los mejores amigos actuales")
+                print(Fore.YELLOW + "2." + Fore.WHITE + " Volver al menú principal")
+                print(Fore.CYAN + "==============================================")
+
+                sub_choice = input(Fore.GREEN + "Elige una opción (1-2): " + Style.RESET_ALL).strip()
+
+                if sub_choice == '1':
+                    scraper.remove_current_close_friends()
+                elif sub_choice == '2':
+                    break
+                else:
+                    print(Fore.RED + "❌ Opción no válida. Intenta nuevamente.")
+
+        elif choice == '5':
             scraper.close()
             print(Fore.MAGENTA + "¡Hasta la próxima!")
             break

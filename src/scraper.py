@@ -263,6 +263,46 @@ class InstagramScraper:
             except Exception as e:
                 print(f"No se pudo procesar {username}: {e}")
 
+    def remove_current_close_friends(self):
+        """
+        Elimina todos los usuarios actuales de la lista de mejores amigos.
+        Se detiene al encontrar el primer usuario que ya no está seleccionado.
+        """
+        from selenium.webdriver.common.action_chains import ActionChains
+
+        print("Accediendo a la configuración de Mejores Amigos...")
+        self.driver.get("https://www.instagram.com/accounts/close_friends/")
+        time.sleep(3)
+
+        try:
+            items = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_all_elements_located((By.XPATH, "//div[@role='button' and @tabindex='0' and contains(@style, 'justify-content: space-between')]"))
+            )
+
+            for index, item in enumerate(items):
+                try:
+                    checkbox_icon = item.find_element(By.XPATH, ".//div[contains(@style, 'background-color')]")
+                    is_selected = "rgb(0, 149, 246)" in checkbox_icon.get_attribute("style")
+
+                    if is_selected:
+                        # Scroll to the item before clicking
+                        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", item)
+                        time.sleep(0.5)
+
+                        print("Desmarcando a un usuario...")
+                        ActionChains(self.driver).move_to_element(item).click().perform()
+                        time.sleep(0.5)
+                    else:
+                        print("Ya no hay más usuarios marcados. Finalizando.")
+                        break
+
+                except Exception as e:
+                    print(f"Error al procesar un ítem: {e}")
+                    continue
+
+        except Exception as e:
+            print(f"No se pudo cargar la lista de mejores amigos: {e}")
+
     def close(self):
         """Cerrar el navegador"""
         self.driver.quit()
