@@ -206,14 +206,44 @@ def main():
             while True:
                 print(Fore.CYAN + "\n========= GESTIÓN DE MEJORES AMIGOS =========")
                 print(Fore.YELLOW + "1." + Fore.WHITE + " Eliminar todos los mejores amigos actuales")
-                print(Fore.YELLOW + "2." + Fore.WHITE + " Volver al menú principal")
+                print(Fore.YELLOW + "2." + Fore.WHITE + " Cargar una nueva lista de mejores amigos desde archivo")
+                print(Fore.YELLOW + "3." + Fore.WHITE + " Volver al menú principal")
                 print(Fore.CYAN + "==============================================")
 
-                sub_choice = input(Fore.GREEN + "Elige una opción (1-2): " + Style.RESET_ALL).strip()
+                sub_choice = input(Fore.GREEN + "Elige una opción (1-3): " + Style.RESET_ALL).strip()
 
                 if sub_choice == '1':
                     scraper.remove_current_close_friends()
+
                 elif sub_choice == '2':
+                    import os
+
+                    folder_path = "custom/close_friends"
+                    files = [f for f in os.listdir(folder_path) if f.endswith(".json")]
+
+                    if not files:
+                        print(Fore.RED + "❌ No se encontraron archivos .json en la carpeta 'custom/close_friends'.")
+                        continue
+
+                    print(Fore.CYAN + "\nSelecciona una lista para cargar como nuevos mejores amigos:")
+                    for i, file in enumerate(files, 1):
+                        print(Fore.YELLOW + f"{i}. " + Fore.WHITE + file)
+
+                    selection = input(Fore.GREEN + f"Elige un número (1-{len(files)}): " + Style.RESET_ALL).strip()
+                    try:
+                        index = int(selection) - 1
+                        if 0 <= index < len(files):
+                            json_path = os.path.join(folder_path, files[index])
+                            print(Fore.MAGENTA + f"\nPrimero eliminando los actuales...")
+                            scraper.remove_current_close_friends()
+                            print(Fore.MAGENTA + f"\nAhora cargando la lista seleccionada...")
+                            scraper.add_close_friends_from_file(json_path)
+                        else:
+                            print(Fore.RED + "❌ Número fuera de rango.")
+                    except ValueError:
+                        print(Fore.RED + "❌ Entrada no válida. Ingresa un número.")
+
+                elif sub_choice == '3':
                     break
                 else:
                     print(Fore.RED + "❌ Opción no válida. Intenta nuevamente.")

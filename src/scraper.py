@@ -303,6 +303,77 @@ class InstagramScraper:
         except Exception as e:
             print(f"No se pudo cargar la lista de mejores amigos: {e}")
 
+    def add_close_friends_from_file(self, json_path):
+        """
+        Agrega usuarios como mejores amigos desde un archivo JSON con formato: [{"value": "username"}]
+        """
+        import json
+
+        print(f"Cargando usuarios desde '{json_path}'...")
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                users = json.load(f)
+        except Exception as e:
+            print(f"❌ No se pudo leer el archivo: {e}")
+            return
+
+        self.driver.get("https://www.instagram.com/accounts/close_friends/")
+        time.sleep(3)
+
+        added = []
+        skipped = []
+        already_added = []
+
+        for user in users:
+            username = user.get("value", "").strip()
+            if not username:
+                continue
+
+            try:
+                input_box = WebDriverWait(self.driver, 5).until(
+                    EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Buscar']"))
+                )
+                input_box.clear()
+                input_box.send_keys(username)
+                time.sleep(2.5)
+
+                first_result = WebDriverWait(self.driver, 5).until(
+                    EC.presence_of_element_located((By.XPATH, "//div[@role='button' and contains(@style,'justify-content: space-between')]"))
+                )
+
+                username_span = first_result.find_element(By.XPATH, ".//span")
+                found_username = username_span.text.strip()
+                if found_username != username:
+                    print(f"⚠️ Se encontró '{found_username}' en lugar de '{username}', saltando.")
+                    skipped.append(username)
+                    continue
+
+                checkbox = first_result.find_element(By.XPATH, ".//div[contains(@style, 'background-color')]")
+                is_checked = "rgb(0, 149, 246)" in checkbox.get_attribute("style")
+
+                if is_checked:
+                    print(f"✅ {username} ya estaba en mejores amigos.")
+                    already_added.append(username)
+                else:
+                    print(f"➕ Añadiendo a {username}...")
+                    first_result.click()
+                    added.append(username)
+                    time.sleep(1)
+
+            except Exception as e:
+                print(f"⚠️ Error al procesar '{username}': {e}")
+                skipped.append(username)
+                continue
+
+        print(Fore.CYAN + "\nResumen del proceso de agregado a mejores amigos:")
+        print(Fore.GREEN + f"✅ {len(added)} usuarios añadidos.")
+        if already_added:
+            print(Fore.YELLOW + f"🟡 {len(already_added)} ya estaban añadidos.")
+        if skipped:
+            print(Fore.RED + f"❌ {len(skipped)} no se pudieron añadir:")
+            for name in skipped:
+                print(Fore.RED + f"   - {name}")
+
     def close(self):
         """Cerrar el navegador"""
         self.driver.quit()
