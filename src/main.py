@@ -85,7 +85,7 @@ def main():
 
     while True:
         mostrar_menu()
-        choice = input(Fore.GREEN + "Elige una opción (1-4): " + Style.RESET_ALL).strip()
+        choice = input(Fore.GREEN + "Elige una opción (1-5): " + Style.RESET_ALL).strip()
 
         if choice == '1':
                 # Solicitudes pendientes
