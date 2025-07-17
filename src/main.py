@@ -5,6 +5,7 @@ import json
 from colorama import init, Fore, Style
 from pyfiglet import Figlet
 import pwinput
+from utils import remove_from_close_friends_lists, add_to_blacklist
 
 init(autoreset=True)  # Inicializar colorama
 
@@ -185,10 +186,32 @@ def main():
                 elif action == 'w':
                     print(f"Añadiendo {user} a la white list...")
                     white_list.add(user)
+                    found_lists = remove_from_close_friends_lists(user)
+                    if found_lists:
+                        print(f"\n👀 El usuario '{user}' se encuentra en las siguientes listas de mejores amigos:")
+                        for lst in found_lists:
+                            print(f"   - {lst}")
+                        confirm = input("¿Deseas eliminarlo de estas listas? (s/n): ").strip().lower()
+                        if confirm == "s":
+                            print("✔️ Eliminado de las listas.")
+                            add_to_blacklist(user)
+                        else:
+                            print("⏭️ Conservando en listas.")
                 elif action == 'd':
                     if scraper.unfollow_if_requested(user):
                         print(Fore.GREEN + f"✔ Cancelación confirmada para: {user}")
                         following = [u for u in following if u['value'] != user]
+                    found_lists = remove_from_close_friends_lists(user)
+                    if found_lists:
+                        print(f"\n👀 El usuario '{user}' se encuentra en las siguientes listas de mejores amigos:")
+                        for lst in found_lists:
+                            print(f"   - {lst}")
+                        confirm = input("¿Deseas eliminarlo de estas listas? (s/n): ").strip().lower()
+                        if confirm == "s":
+                            print("✔️ Eliminado de las listas.")
+                            add_to_blacklist(user)
+                        else:
+                            print("⏭️ Conservando en listas.")
                 else:
                     print("Saltando...")
 
