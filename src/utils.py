@@ -2,7 +2,7 @@ import os
 import json
 from datetime import datetime
 
-def remove_from_close_friends_lists(username):
+def find_user_in_close_friends_lists(username):
     base_path = "custom/close_friends"
     found_in = []
     for file in os.listdir(base_path):

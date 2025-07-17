@@ -5,7 +5,7 @@ import json
 from colorama import init, Fore, Style
 from pyfiglet import Figlet
 import pwinput
-from utils import remove_from_close_friends_lists, add_to_blacklist
+from utils import find_user_in_close_friends_lists, add_to_blacklist
 
 init(autoreset=True)  # Inicializar colorama
 
@@ -186,7 +186,7 @@ def main():
                 elif action == 'w':
                     print(f"Añadiendo {user} a la white list...")
                     white_list.add(user)
-                    found_lists = remove_from_close_friends_lists(user)
+                    found_lists = find_user_in_close_friends_lists(user)
                     if found_lists:
                         print(f"\n👀 El usuario '{user}' se encuentra en las siguientes listas de mejores amigos:")
                         for lst in found_lists:
@@ -201,7 +201,7 @@ def main():
                     if scraper.unfollow_if_requested(user):
                         print(Fore.GREEN + f"✔ Cancelación confirmada para: {user}")
                         following = [u for u in following if u['value'] != user]
-                    found_lists = remove_from_close_friends_lists(user)
+                    found_lists = find_user_in_close_friends_lists(user)
                     if found_lists:
                         print(f"\n👀 El usuario '{user}' se encuentra en las siguientes listas de mejores amigos:")
                         for lst in found_lists:
