@@ -292,6 +292,48 @@ class InstagramScraper:
                         print("Desmarcando a un usuario...")
                         ActionChains(self.driver).move_to_element(item).click().perform()
                         time.sleep(0.5)
+                        try:
+                            username_element = item.find_element(By.XPATH, ".//span")
+                            username = username_element.text.strip()
+
+                            from utils import is_user_in_any_close_friends_list
+                            found_lists = is_user_in_any_close_friends_list(username)
+
+                            if not found_lists:
+                                print(f"🟡 El usuario '{username}' no estaba en ninguna lista.")
+                                import os
+                                from pathlib import Path
+                                close_friends_dir = Path("custom/close_friends")
+                                available_lists = [f.name for f in close_friends_dir.glob("*.json")]
+
+                                if available_lists:
+                                    print("¿Deseas añadirlo a alguna de estas listas?")
+                                    for idx, fname in enumerate(available_lists, 1):
+                                        print(f"{idx}. {fname}")
+
+                                    selection = input("Elige el número de la lista o presiona Enter para omitir: ").strip()
+                                    if selection.isdigit():
+                                        idx = int(selection) - 1
+                                        if 0 <= idx < len(available_lists):
+                                            chosen_file = close_friends_dir / available_lists[idx]
+                                            try:
+                                                import json
+                                                with open(chosen_file, "r+", encoding="utf-8") as f:
+                                                    data = json.load(f)
+                                                    if not any(u.get("value") == username for u in data):
+                                                        data.append({"value": username})
+                                                        f.seek(0)
+                                                        json.dump(data, f, indent=4)
+                                                        f.truncate()
+                                                        print(f"✅ Añadido a {available_lists[idx]}")
+                                                    else:
+                                                        print("ℹ️ Ya estaba en esa lista.")
+                                            except Exception as e:
+                                                print(f"❌ No se pudo escribir en {chosen_file}: {e}")
+                                else:
+                                    print("⚠️ No hay listas disponibles para añadir el usuario.")
+                        except Exception as e:
+                            print(f"⚠️ No se pudo obtener el nombre de usuario ni actualizar listas: {e}")
                     else:
                         print("Ya no hay más usuarios marcados. Finalizando.")
                         break

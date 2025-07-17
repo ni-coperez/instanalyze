@@ -2,7 +2,7 @@ import os
 import json
 from datetime import datetime
 
-def find_user_in_close_friends_lists(username):
+def remove_user_in_close_friends_lists(username):
     base_path = "custom/close_friends"
     found_in = []
     for file in os.listdir(base_path):
@@ -21,6 +21,20 @@ def find_user_in_close_friends_lists(username):
                 except Exception as e:
                     print(f"⚠️ No se pudo procesar {file}: {e}")
     return found_in
+
+def is_user_in_any_close_friends_list(username):
+    base_path = "custom/close_friends"
+    for file in os.listdir(base_path):
+        if file.endswith(".json"):
+            path = os.path.join(base_path, file)
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if any(entry.get("value") == username for entry in data):
+                        return True
+            except Exception as e:
+                print(f"⚠️ No se pudo leer {file}: {e}")
+    return False
 
 def add_to_blacklist(username):
     blacklist_path = "custom/not_following/black_list.json"
@@ -42,3 +56,18 @@ def add_to_blacklist(username):
         f.seek(0)
         json.dump(data, f, indent=4)
         f.truncate()
+
+def find_user_in_close_friends_lists(username):
+    base_path = "custom/close_friends"
+    found_in = []
+    for file in os.listdir(base_path):
+        if file.endswith(".json"):
+            path = os.path.join(base_path, file)
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if any(entry.get("value") == username for entry in data):
+                        found_in.append(file)
+            except Exception as e:
+                print(f"⚠️ No se pudo leer {file}: {e}")
+    return found_in

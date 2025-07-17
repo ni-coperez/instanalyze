@@ -5,7 +5,7 @@ import json
 from colorama import init, Fore, Style
 from pyfiglet import Figlet
 import pwinput
-from utils import find_user_in_close_friends_lists, add_to_blacklist
+from utils import find_user_in_close_friends_lists, add_to_blacklist, remove_user_in_close_friends_lists
 
 init(autoreset=True)  # Inicializar colorama
 
@@ -193,8 +193,9 @@ def main():
                             print(f"   - {lst}")
                         confirm = input("¿Deseas eliminarlo de estas listas? (s/n): ").strip().lower()
                         if confirm == "s":
-                            print("✔️ Eliminado de las listas.")
+                            remove_user_in_close_friends_lists(user)
                             add_to_blacklist(user)
+                            print("✔️ Eliminado de las listas.")
                         else:
                             print("⏭️ Conservando en listas.")
                 elif action == 'd':
@@ -208,8 +209,9 @@ def main():
                             print(f"   - {lst}")
                         confirm = input("¿Deseas eliminarlo de estas listas? (s/n): ").strip().lower()
                         if confirm == "s":
-                            print("✔️ Eliminado de las listas.")
+                            remove_user_in_close_friends_lists(user)
                             add_to_blacklist(user)
+                            print("✔️ Eliminado de las listas.")
                         else:
                             print("⏭️ Conservando en listas.")
                 else:
