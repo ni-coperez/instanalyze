@@ -60,7 +60,7 @@ def mostrar_menu():
     print(Fore.CYAN + f.renderText('Instanalyze'))
     print(Style.BRIGHT + Fore.CYAN + "================== MENÚ ==================")
     print(Fore.YELLOW + "1." + Fore.WHITE + " Eliminar solicitudes pendientes")
-    print(Fore.YELLOW + "2." + Fore.WHITE + " Eliminar usuarios que sigues pero no te siguen")
+    print(Fore.YELLOW + "2." + Fore.WHITE + " Mis seguidos")
     print(Fore.YELLOW + "3." + Fore.WHITE + " Ocultar o mostrar historias")
     print(Fore.YELLOW + "4." + Fore.WHITE + " Gestionar mejores amigos")
     print(Fore.YELLOW + "5." + Fore.WHITE + " Salir")
@@ -153,74 +153,136 @@ def main():
                     print("No tienes solicitudes pendientes.")
 
         elif choice == '2':
-            # Usuarios que sigues pero no te siguen
-            following_users = {user['value'] for user in following}
-            followers_users = {user['value'] for user in followers}
+            while True:
+                print(Fore.CYAN + "\n============= MIS SEGUIDOS =============")
+                print(Fore.YELLOW + "1." + Fore.WHITE + " Eliminar usuarios que sigues pero no te siguen")
+                print(Fore.YELLOW + "2." + Fore.WHITE + " Analizar uno a uno mis seguidos")
+                print(Fore.YELLOW + "3." + Fore.WHITE + " Volver al menú principal")
+                print(Fore.CYAN + "=========================================")
 
-            not_followed_by = sorted(following_users - followers_users)
+                sub_choice = input(Fore.GREEN + "Elige una opción (1-3): " + Style.RESET_ALL).strip()
 
-            # Cargar white list
-            try:
-                with open("custom/not_following/white_list.json", "r", encoding="utf-8") as f:
-                    white_list = {entry['value'] for entry in json.load(f)}
-            except (FileNotFoundError, json.JSONDecodeError):
-                white_list = set()
+                # Cargar white list
+                try:
+                    with open("custom/not_following/white_list.json", "r", encoding="utf-8") as f:
+                        white_list = {entry['value'] for entry in json.load(f)}
+                except (FileNotFoundError, json.JSONDecodeError):
+                    white_list = set()
 
-            # Filtrar usuarios que no están en la whitelist
-            filtered_users = [user for user in not_followed_by if user not in white_list]
+                if sub_choice == '1':
+                    # Usuarios que sigues pero no te siguen
+                    following_users = {user['value'] for user in following}
+                    followers_users = {user['value'] for user in followers}
+                    not_followed_by = sorted(following_users - followers_users)
 
-            print(f"\nTotal de usuarios que sigues pero no te siguen (filtrados): {len(filtered_users)}")
+                    filtered_users = [user for user in not_followed_by if user not in white_list]
+                    print(f"\nTotal de usuarios que sigues pero no te siguen (filtrados): {len(filtered_users)}")
 
-            for user in filtered_users:
-                print(Fore.YELLOW + "\n----------------------------------------")
-                print(Fore.RED + f"Cancelación de solicitud para: {user}")
-                print(Fore.YELLOW + "----------------------------------------")
+                    for user in filtered_users:
+                        print(Fore.YELLOW + "\n----------------------------------------")
+                        print(Fore.RED + f"Procesando usuario: {user}")
+                        print(Fore.YELLOW + "----------------------------------------")
 
-                scraper.view_profile(user)
-                
-                action = input("¿Dejar de seguir (d) / Agregar a whitelist (w) / Saltar (s) / Salir (q)? ").strip().lower()
+                        scraper.view_profile(user)
 
-                if action == 'q':
-                    print("Saliendo del recorrido de usuarios.")
+                        action = input("¿Dejar de seguir (d) / Agregar a whitelist (w) / Saltar (s) / Salir (q)? ").strip().lower()
+
+                        if action == 'q':
+                            print("Saliendo del recorrido de usuarios.")
+                            break
+                        elif action == 'w':
+                            print(f"Añadiendo {user} a la white list...")
+                            white_list.add(user)
+                            found_lists = find_user_in_close_friends_lists(user)
+                            if found_lists:
+                                print(f"\n👀 El usuario '{user}' está en estas listas de mejores amigos:")
+                                for lst in found_lists:
+                                    print(f"   - {lst}")
+                                confirm = input("¿Deseas eliminarlo de estas listas? (s/n): ").strip().lower()
+                                if confirm == "s":
+                                    remove_user_in_close_friends_lists(user)
+                                    add_to_blacklist(user)
+                                    print("✔️ Eliminado de las listas.")
+                                else:
+                                    print("⏭️ Conservando en listas.")
+                        elif action == 'd':
+                            if scraper.unfollow_if_requested(user):
+                                print(Fore.GREEN + f"✔ Cancelación confirmada para: {user}")
+                                following = [u for u in following if u['value'] != user]
+                            found_lists = find_user_in_close_friends_lists(user)
+                            if found_lists:
+                                print(f"\n👀 El usuario '{user}' está en estas listas de mejores amigos:")
+                                for lst in found_lists:
+                                    print(f"   - {lst}")
+                                confirm = input("¿Deseas eliminarlo de estas listas? (s/n): ").strip().lower()
+                                if confirm == "s":
+                                    remove_user_in_close_friends_lists(user)
+                                    add_to_blacklist(user)
+                                    print("✔️ Eliminado de las listas.")
+                                else:
+                                    print("⏭️ Conservando en listas.")
+                        else:
+                            print("Saltando...")
+
+                elif sub_choice == '2':
+                    # Analizar todos los seguidos uno a uno
+                    all_following_users = sorted({user['value'] for user in following})
+                    filtered_users = [user for user in all_following_users if user not in white_list]
+                    print(f"\nTotal de usuarios a analizar (filtrados por whitelist): {len(filtered_users)}")
+
+                    for user in filtered_users:
+                        print(Fore.YELLOW + "\n----------------------------------------")
+                        print(Fore.RED + f"Procesando usuario: {user}")
+                        print(Fore.YELLOW + "----------------------------------------")
+
+                        scraper.view_profile(user)
+
+                        action = input("¿Dejar de seguir (d) / Agregar a whitelist (w) / Saltar (s) / Salir (q)? ").strip().lower()
+
+                        if action == 'q':
+                            print("Saliendo del recorrido de usuarios.")
+                            break
+                        elif action == 'w':
+                            print(f"Añadiendo {user} a la white list...")
+                            white_list.add(user)
+                            found_lists = find_user_in_close_friends_lists(user)
+                            if found_lists:
+                                print(f"\n👀 El usuario '{user}' está en estas listas de mejores amigos:")
+                                for lst in found_lists:
+                                    print(f"   - {lst}")
+                                confirm = input("¿Deseas eliminarlo de estas listas? (s/n): ").strip().lower()
+                                if confirm == "s":
+                                    remove_user_in_close_friends_lists(user)
+                                    add_to_blacklist(user)
+                                    print("✔️ Eliminado de las listas.")
+                                else:
+                                    print("⏭️ Conservando en listas.")
+                        elif action == 'd':
+                            if scraper.unfollow_if_requested(user):
+                                print(Fore.GREEN + f"✔ Cancelación confirmada para: {user}")
+                                following = [u for u in following if u['value'] != user]
+                            found_lists = find_user_in_close_friends_lists(user)
+                            if found_lists:
+                                print(f"\n👀 El usuario '{user}' está en estas listas de mejores amigos:")
+                                for lst in found_lists:
+                                    print(f"   - {lst}")
+                                confirm = input("¿Deseas eliminarlo de estas listas? (s/n): ").strip().lower()
+                                if confirm == "s":
+                                    remove_user_in_close_friends_lists(user)
+                                    add_to_blacklist(user)
+                                    print("✔️ Eliminado de las listas.")
+                                else:
+                                    print("⏭️ Conservando en listas.")
+                        else:
+                            print("Saltando...")
+
+                elif sub_choice == '3':
                     break
-                elif action == 'w':
-                    print(f"Añadiendo {user} a la white list...")
-                    white_list.add(user)
-                    found_lists = find_user_in_close_friends_lists(user)
-                    if found_lists:
-                        print(f"\n👀 El usuario '{user}' se encuentra en las siguientes listas de mejores amigos:")
-                        for lst in found_lists:
-                            print(f"   - {lst}")
-                        confirm = input("¿Deseas eliminarlo de estas listas? (s/n): ").strip().lower()
-                        if confirm == "s":
-                            remove_user_in_close_friends_lists(user)
-                            add_to_blacklist(user)
-                            print("✔️ Eliminado de las listas.")
-                        else:
-                            print("⏭️ Conservando en listas.")
-                elif action == 'd':
-                    if scraper.unfollow_if_requested(user):
-                        print(Fore.GREEN + f"✔ Cancelación confirmada para: {user}")
-                        following = [u for u in following if u['value'] != user]
-                    found_lists = find_user_in_close_friends_lists(user)
-                    if found_lists:
-                        print(f"\n👀 El usuario '{user}' se encuentra en las siguientes listas de mejores amigos:")
-                        for lst in found_lists:
-                            print(f"   - {lst}")
-                        confirm = input("¿Deseas eliminarlo de estas listas? (s/n): ").strip().lower()
-                        if confirm == "s":
-                            remove_user_in_close_friends_lists(user)
-                            add_to_blacklist(user)
-                            print("✔️ Eliminado de las listas.")
-                        else:
-                            print("⏭️ Conservando en listas.")
                 else:
-                    print("Saltando...")
+                    print(Fore.RED + "❌ Opción no válida. Intenta nuevamente.")
 
-            # Guardar archivo de following actualizado
+            # Guardar cambios al finalizar cualquiera de las opciones
             loader.save_following("data/following.json", following)
-
-            # Guardar white list actualizada
             with open("custom/not_following/white_list.json", "w", encoding="utf-8") as f:
                 json.dump([{"value": user} for user in sorted(white_list)], f, indent=4, ensure_ascii=False)
 
