@@ -193,6 +193,8 @@ def main():
                         elif action == 'w':
                             print(f"Añadiendo {user} a la white list...")
                             white_list.add(user)
+                            with open("custom/not_following/white_list.json", "w", encoding="utf-8") as f:
+                                json.dump([{"value": u} for u in sorted(white_list)], f, indent=4, ensure_ascii=False)
                             found_lists = find_user_in_close_friends_lists(user)
                             if found_lists:
                                 print(f"\n👀 El usuario '{user}' está en estas listas de mejores amigos:")
@@ -245,6 +247,8 @@ def main():
                         elif action == 'w':
                             print(f"Añadiendo {user} a la white list...")
                             white_list.add(user)
+                            with open("custom/not_following/white_list.json", "w", encoding="utf-8") as f:
+                                json.dump([{"value": u} for u in sorted(white_list)], f, indent=4, ensure_ascii=False)
                             found_lists = find_user_in_close_friends_lists(user)
                             if found_lists:
                                 print(f"\n👀 El usuario '{user}' está en estas listas de mejores amigos:")

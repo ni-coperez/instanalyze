@@ -272,11 +272,12 @@ class InstagramScraper:
 
         print("Accediendo a la configuración de Mejores Amigos...")
         self.driver.get("https://www.instagram.com/accounts/close_friends/")
-        time.sleep(3)
+        time.sleep(2)
 
         try:
+            # Cada usuario está contenido en un div con cursor: pointer y justify-content: space-between
             items = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_all_elements_located((By.XPATH, "//div[@role='button' and @tabindex='0' and contains(@style, 'justify-content: space-between')]"))
+                EC.presence_of_all_elements_located((By.XPATH, "//div[contains(@style, 'cursor: pointer') and contains(@style, 'space-between')]"))
             )
 
             for index, item in enumerate(items):
