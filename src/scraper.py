@@ -244,24 +244,37 @@ class InstagramScraper:
                     EC.presence_of_element_located((By.XPATH, f"//span[text()='{username}']"))
                 )
 
-                # Subimos al div contenedor del usuario para encontrar el checkbox asociado
-                user_container = result.find_element(By.XPATH, "./ancestor::div[@role='button']")
-                checkbox = user_container.find_element(By.XPATH, ".//div[@role='button'][@tabindex='0']")
+                # Subimos al div contenedor del usuario para encontrar el botón asociado al checkbox
+                user_container = result.find_element(By.XPATH, "./ancestor::div[contains(@style,'justify-content: space-between')]")
+                checkbox = user_container.find_element(
+                    By.XPATH,
+                    ".//div[@role='button' and @aria-label='Activar o desactivar casilla']"
+                )
 
-                # Determinar si está chequeado
-                checkbox_status = checkbox.find_element(By.XPATH, ".//div[contains(@style,'background-color')]")
-                is_checked = "rgb(0, 149, 246)" in checkbox_status.get_attribute("style")
+                # Determinar si está seleccionado por el color de fondo del icono
+                icon_div = checkbox.find_element(
+                    By.XPATH,
+                    ".//div[@data-bloks-name='ig.components.Icon']"
+                )
+                style = icon_div.get_attribute("style") or ""
+                is_selected = "background-color: rgb(0, 149, 246)" in style
+                is_unselected = "background-color: rgb(54, 54, 54)" in style
 
-                should_click = (action == "ocultar" and not is_checked) or (action == "mostrar" and is_checked)
+                should_click = (
+                    (action == "ocultar" and not is_selected) or
+                    (action == "mostrar" and is_selected)
+                )
                 if should_click:
-                    checkbox.click()
+                    # Usar JS para evitar problemas de pointer-events
+                    self.driver.execute_script("arguments[0].click();", checkbox)
                     print(f"{action.capitalize()} historias para: {username}")
                 else:
                     print(f"Ya estaba en el estado deseado: {username}")
-                time.sleep(1)
+                time.sleep(30)
 
             except Exception as e:
                 print(f"No se pudo procesar {username}: {e}")
+                time.sleep(30)
 
     def remove_current_close_friends(self):
         """
@@ -272,13 +285,15 @@ class InstagramScraper:
 
         print("Accediendo a la configuración de Mejores Amigos...")
         self.driver.get("https://www.instagram.com/accounts/close_friends/")
-        time.sleep(2)
+        time.sleep(3)
 
         try:
-            # Cada usuario está contenido en un div con cursor: pointer y justify-content: space-between
+            # Nueva lógica: buscamos los span de nombres de usuario dentro de botones válidos, y subimos al contenedor botón
             items = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_all_elements_located((By.XPATH, "//div[contains(@style, 'cursor: pointer') and contains(@style, 'space-between')]"))
+                EC.presence_of_all_elements_located((By.XPATH, "//div[@role='button' and @tabindex='0']//span"))
             )
+            # Subir al contenedor del usuario (el botón) desde el span
+            items = [span.find_element(By.XPATH, "./ancestor::div[@role='button']") for span in items]
 
             for index, item in enumerate(items):
                 try:
