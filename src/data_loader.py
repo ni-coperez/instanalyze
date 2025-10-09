@@ -17,14 +17,14 @@ class JsonLoader:
             raise ValueError(f"Error al cargar el archivo {path}: {e}")
 
     def load_following(self, path: str) -> List[Dict[str, Any]]:
-        """Carga el archivo following.json y guarda internamente la lista de seguidos"""
+        """Carga el archivo following.json y devuelve una lista de diccionarios con 'value' como el nombre de usuario"""
         data = self.load_json(path)
         if "relationships_following" not in data:
             raise ValueError("El archivo no tiene la clave 'relationships_following'")
         self.following_data = [
-            item["string_list_data"][0]
+            {"value": item["title"]}
             for item in data["relationships_following"]
-            if "string_list_data" in item and item["string_list_data"]
+            if "title" in item
         ]
         return self.following_data
 
