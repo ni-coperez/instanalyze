@@ -17,33 +17,55 @@ class InstagramScraper:
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
     def login(self):
-        self.driver.get("https://www.instagram.com/accounts/login/")
-        time.sleep(2)  # Esperamos un poco para que la página cargue
-        
+        self.driver.get("https://www.instagram.com/")
+        wait = WebDriverWait(self.driver, 20)
+
+        # --- Manejo de cookies ---
         try:
-            # Verificamos si el botón de rechazar cookies opcionales está disponible
-            reject_cookies_button = WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Rechazar cookies opcionales')]"))
+            cookies_button = wait.until(
+                EC.element_to_be_clickable((
+                    By.XPATH,
+                    "//button[contains(text(),'Permitir todas las cookies') or contains(text(),'Rechazar cookies opcionales')]"
+                ))
             )
-            reject_cookies_button.click()  # Hacemos clic en el botón para rechazar las cookies
-            print(Fore.YELLOW + "⚠️ Cookies opcionales rechazadas.")
+            cookies_button.click()
+            print(Fore.YELLOW + "⚠️ Modal de cookies gestionado.")
+            time.sleep(2)
         except TimeoutException:
-            print("No se encontró el botón de cookies opcionales. Continuando con el login.")
-        
-        # Llenamos el formulario de login
-        username_input = self.driver.find_element(By.NAME, "username")
-        password_input = self.driver.find_element(By.NAME, "password")
-        
+            print("No apareció el modal de cookies.")
+
+        # --- Esperar inputs de login (nuevo DOM Instagram) ---
+        username_input = wait.until(
+            EC.presence_of_element_located((By.NAME, "email"))
+        )
+
+        password_input = wait.until(
+            EC.presence_of_element_located((By.NAME, "pass"))
+        )
+
+        time.sleep(1)
+        username_input.clear()
         username_input.send_keys(self.username)
+
+        time.sleep(1)
+        password_input.clear()
         password_input.send_keys(self.password)
-        
-        login_button = self.driver.find_element(By.XPATH, "//button[@type='submit']")
+
+        # --- Botón Iniciar sesión (nuevo formato div role=button) ---
+        login_button = wait.until(
+            EC.element_to_be_clickable((
+                By.XPATH,
+                "//div[@role='button']//span[text()='Iniciar sesión']/ancestor::div[@role='button']"
+            ))
+        )
+
+        time.sleep(2)
         login_button.click()
-        
-        time.sleep(5)  # Esperamos unos segundos para asegurarnos de que la página se haya cargado
-        print(Fore.GREEN + "✅ Login completado.")
-        
-        # Intentamos encontrar el campo para el código de verificación
+
+        time.sleep(5)
+        print(Fore.GREEN + "✅ Login enviado.")
+
+        # Intentar manejar 2FA si aparece
         self.handle_verification_code()
 
     def handle_verification_code(self):
