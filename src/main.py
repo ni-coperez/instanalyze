@@ -227,9 +227,15 @@ def main():
                             print("Saltando...")
 
                 elif sub_choice == '2':
+                    # Cargar whitelist específica de revisión de seguidos
+                    try:
+                        with open("custom/following_review_white_list.json", "r", encoding="utf-8") as f:
+                            following_review_white_list = {entry['value'] for entry in json.load(f)}
+                    except (FileNotFoundError, json.JSONDecodeError):
+                        following_review_white_list = set()
                     # Analizar todos los seguidos uno a uno
                     all_following_users = sorted({user['value'] for user in following})
-                    filtered_users = [user for user in all_following_users if user not in white_list]
+                    filtered_users = [user for user in all_following_users if user not in following_review_white_list]
                     print(f"\nTotal de usuarios a analizar (filtrados por whitelist): {len(filtered_users)}")
 
                     for user in filtered_users:
@@ -246,9 +252,9 @@ def main():
                             break
                         elif action == 'w':
                             print(f"Añadiendo {user} a la white list...")
-                            white_list.add(user)
-                            with open("custom/not_following/white_list.json", "w", encoding="utf-8") as f:
-                                json.dump([{"value": u} for u in sorted(white_list)], f, indent=4, ensure_ascii=False)
+                            following_review_white_list.add(user)
+                            with open("custom/following_review_white_list.json", "w", encoding="utf-8") as f:
+                                json.dump([{"value": u} for u in sorted(following_review_white_list)], f, indent=4, ensure_ascii=False)
                             found_lists = find_user_in_close_friends_lists(user)
                             if found_lists:
                                 print(f"\n👀 El usuario '{user}' está en estas listas de mejores amigos:")

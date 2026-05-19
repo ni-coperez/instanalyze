@@ -43,13 +43,26 @@ class JsonLoader:
     def load_pending_follow_requests(self, path: str) -> List[Dict[str, Any]]:
         """Carga el archivo pending_follow_requests.json y guarda internamente las solicitudes pendientes"""
         data = self.load_json(path)
-        if "relationships_follow_requests_sent" not in data:
-            raise ValueError("El archivo no tiene la clave 'relationships_follow_requests_sent'")
+
+        # Formato antiguo
+        if isinstance(data, dict) and "relationships_follow_requests_sent" in data:
+            source = data["relationships_follow_requests_sent"]
+
+        # Formato nuevo
+        elif isinstance(data, list):
+            source = data
+
+        else:
+            raise ValueError(
+                "El archivo no tiene una estructura válida para pending follow requests"
+            )
+
         self.pending_requests_data = [
             item["string_list_data"][0]
-            for item in data["relationships_follow_requests_sent"]
+            for item in source
             if "string_list_data" in item and item["string_list_data"]
         ]
+
         return self.pending_requests_data
 
     def save_pending_follow_requests(self, path: str, pending_requests: List[Dict[str, Any]]) -> None:
